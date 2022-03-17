@@ -1,6 +1,9 @@
-archive
-download
-test
+clean/*
+data/*
+header.csv
+archive/*
+download/*
+test/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

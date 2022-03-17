@@ -12,6 +12,7 @@ from pathlib import Path
 from pprint import pprint as pp
 import re
 import shutil
+import sys
 from traceback import print_exc
 import warnings
 from warnings import warn
@@ -151,12 +152,15 @@ def list_files():
     trip_files = list(set(csv_files).difference(station_files))
     return csv_files, station_files, trip_files
 
-def list_trip_files(d=DATA_DIR):
+def list_trip_files(src=DATA_DIR):
     if type(d) is str:
         d = Path(d)
-    return [d / s for s in glob('**', root_dir=DATA_DIR) if s.endswith('.csv') and not 'Station' in s.split('/')[-1]]
+    return [d / s for s in glob('**', root_dir=src, recursive=True) if s.endswith('.csv') and not 'Station' in s.split('/')[-1]]
 
-# CSV_FILES, STATION_FILES, TRIP_FILES = list_files()
+def list_station_files(src=DATA_DIR):
+    pass
+
+CSV_FILES, STATION_FILES, TRIP_FILES = list_files()
 
 def read_trip_csv_frame(f):
     h = pd.read_csv(HEADER_FILE)
