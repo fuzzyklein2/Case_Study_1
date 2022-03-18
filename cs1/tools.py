@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 from dateutil.parser import parse
 from ftplib import FTP_TLS as FTP
 from glob import glob
+import hashlib
 import os
 from pathlib import Path
 from pprint import pprint as pp
@@ -141,15 +142,30 @@ def move_zip_files():
         dest = str(ARCHIVE / p.name)
         shutil.move(src, dest)
 
+def hash_zip_files():
+    cd(ARCHIVE)
+    for f in glob('**'):
+        # filename = input("Enter the file name: ")
+        md5_hash = hashlib.md5()
+        with (ARCHIVE/f).open("rb") as input:
+            # Read and update hash in chunks of 4K
+            for byte_block in iter(lambda: input.read(4096),b""):
+                md5_hash.update(byte_block)
+            (ARCHIVE/('.'.join(f.split('.')[:-1]) + '.md5')).write_text(md5_hash.hexdigest())
+    cd(BASE_DIR)
+
 def refresh_data():
     download_data()
     extract_data()
     move_zip_files()
+    hash_zip_files()
 
 def list_files():
+    cd(DATA_DIR)
     csv_files = [Path(s).absolute() for s in glob('**', recursive=True) if s.endswith('.csv')]
     station_files = [p for p in csv_files if 'Station' in p.name]
     trip_files = list(set(csv_files).difference(station_files))
+    cd(BASE_DIR)
     return csv_files, station_files, trip_files
 
 def list_trip_files(src=DATA_DIR):
