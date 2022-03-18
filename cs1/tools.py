@@ -27,7 +27,7 @@ from numpy import *
 import pandas as pd
 import requests
 
-MAX_COLS = 14
+MAX_COLS = 13
 
 BASE_DIR = Path(os.curdir).resolve().absolute()
 DATA_DIR = BASE_DIR / 'data'
