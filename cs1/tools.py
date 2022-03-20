@@ -6,6 +6,7 @@ from cmd import Cmd
 from datetime import date, datetime, timedelta
 from dateutil.parser import parse
 from ftplib import FTP_TLS as FTP
+from functools import partial, wraps
 from glob import glob
 import hashlib
 import os
@@ -59,6 +60,13 @@ def head(p):
     with p.open() as f:
         for i in range(20):
             print("'" + f.readline().rstrip('\n') + "'")
+
+def path2str(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        args = [str(a) for a in args]
+        return f(*args, **kwargs)
+    return wrapper
 
 def geo_deg_2_feet(d):
     return d*1000/9*3280.4

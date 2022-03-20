@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from tools import *
 
-COLUMNS = dict()
+COLUMNS = dict() # Manually added the `unique_trip_cols`, sorted by correspondence.
 COLUMNS['ID'] = ['01 - Rental Details Rental ID', 'ride_id', 'trip_id']
 COLUMNS['Start Time'] = ['01 - Rental Details Local Start Time', 'started_at', 'start_time', 'starttime']
 COLUMNS['End Time'] = ['01 - Rental Details Local End Time', 'ended_at', 'end_time', 'stoptime']
@@ -24,15 +24,15 @@ COLUMNS['Start Latitude'] = ['start_lat']
 COLUMNS['Start Longitude'] = ['start_lng']
 COLUMNS['Bike Type'] = ['rideable_type']
 
-COLS_LIST = COLUMNS.keys()
+COLS_LIST = COLUMNS.keys() # Columns to keep, redundantly defined below.
 
 USER_VALS = dict()
 USER_VALS['M'] = ['Subscriber', 'member']
 USER_VALS['C'] = ['Customer', 'casual']
 USER_VALS['D'] = ['Dependent']
 
-COLS_2_KEEP = [
-               'ID', 
+COLS_2_KEEP = [ # Redundant, but here for the purpose of commenting some out.
+               'ID',
                'Start Time',
                'End Time',
                'Bike ID',
@@ -52,6 +52,8 @@ COLS_2_KEEP = [
               ]
 
 def list_trip_files(src=DATA_DIR):
+    """ Returns a `list` of any bike trip files in `src`. Only checks to see that the file name does not contain "Station".
+    """
     cd(src)
     if type(src) is str:
         src = Path(src)
@@ -60,12 +62,18 @@ def list_trip_files(src=DATA_DIR):
     return value
 
 def read_trip_csv_frame(f):
+    """ Return a `pd.DataFrame` representing the `CSV` file `f`. Assumes that `f` lacks column headers.
+    """
+    if type(f) is Path:
+        f = str(f)
     h = pd.read_csv(HEADER_FILE)
     ff = pd.read_csv(f)
     ff.columns = h.columns
     return pd.concat([h, ff])
 
 def unique_values(s):
+    """ Return a list containing the unique values contained in the given column over all the trip files.
+    """
     v = list()
     for f in list_trip_files():
         df = pd.read_csv(f)
@@ -79,48 +87,54 @@ def unique_values(s):
     return v
 
 def find_trip_cols():
+    """ Return a list of all the column names in all of the trip files.
+    """
     trip_cols = list()
     for p in list_trip_files():
         with p.open() as f:
             new_list = [s.strip() for s in next(f).strip().split(',')]
-    #         while len(new_list) < MAX_COLS:
-    #             new_list.append('')
             trip_cols.extend(new_list)
-
     return list(set([str(L) for L in trip_cols]))
 
 def unique_trip_cols():
+    """ Return a `list` of the unique column names over all of the trip files.
+    """
     u = pd.Series(find_trip_cols()).unique()
     return [u[i] for i in range(len(u))]
 
 def consist_cols(dest=DATA_DIR):
-    for i, p in enumerate(list_trip_files()):
-        print(f'{i=}')
-        print(f'Processing {p}')
-        lines = p.read_text().split('\n')
-        print(f'Columns: {lines[0]}')
-        C = lines[0].split(',')
-        output = lines[0]
-        for s in C:
-            if s in COLS_LIST:
-                s2 = s
-            else:
-                if s.startswith('"'):
-                    s2 = '"' + reverse_lookup(COLUMNS, s.strip('"')) + '"'
+    """ Copy all of the trip files in the `data` directory to the `test` directory with consistent column names.
+    """
+    log = BASE_DIR / 'trip_cols.log'
+    with log.open(mode='w') as f:
+        write = partial(print, file=f)
+        for i, p in enumerate(list_trip_files()):
+            write(f'{i=}', file=f)
+            write(f'Processing {p}', file=f)
+            lines = p.read_text().split('\n')
+            write(f'Columns: {lines[0]}', file=f)
+            C = lines[0].split(',')
+            output = lines[0]
+            for s in C:
+                if s in COLS_LIST:
+                    s2 = s
                 else:
-                    s2 = reverse_lookup(COLUMNS, s)
-        #         print(s2)
-            output = output.replace(s, s2 if s2 else '')
-        print(f'New Columns: {output}')
-        print()
-        (dest/p.name).write_text('\n'.join([output, *lines[1:]]))
+                    if s.startswith('"'):
+                        s2 = '"' + reverse_lookup(COLUMNS, s.strip('"')) + '"'
+                    else:
+                        s2 = reverse_lookup(COLUMNS, s)
+                output = output.replace(s, s2 if s2 else '')
+            write(f'New Columns: {output}', file=f)
+            write(file=f)
+            (dest/p.name).write_text('\n'.join([output, *lines[1:]]))
 
+@path2str
 def open_data_frame(p):
+    """ Return a `pd.DataFrame` representing the file represented by `p`.
+    """
     cols_2_keep = COLS_2_KEEP
-#     cols_2_keep.extend([f'"{s}"' for s in cols_2_keep])
-#     columnize(cols_2_keep)
     print(f'Processing file: {p.name}')
-    df = pd.read_csv(str(p))
+    df = pd.read_csv(p)
     print(f'{df.columns=}')
     MAX_LEN = len(COLS_2_KEEP)
     cols_2_drop = list(set(df.columns).difference(cols_2_keep))
