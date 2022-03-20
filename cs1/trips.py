@@ -31,6 +31,26 @@ USER_VALS['M'] = ['Subscriber', 'member']
 USER_VALS['C'] = ['Customer', 'casual']
 USER_VALS['D'] = ['Dependent']
 
+COLS_2_KEEP = [
+               'ID', 
+               'Start Time',
+               'End Time',
+               'Bike ID',
+               'Duration',
+               'From Station ID',
+               'To Station ID',
+               'User Type',
+               'Gender',
+               'Birth Year',
+               'To Station Name',
+               'From Station Name',
+               'End Latitude',
+               'End Longitude',
+               'Bike Type',
+               'Start Latitude',
+               'Start Longitude'
+              ]
+
 def list_trip_files(src=DATA_DIR):
     cd(src)
     if type(src) is str:
@@ -49,10 +69,11 @@ def unique_values(s):
     v = list()
     for f in list_trip_files():
         df = pd.read_csv(f)
-        for u in df[s].dropna().unique():
-            v.append(u)
+        if s in df.columns:
+            for u in df[s].dropna().unique():
+                v.append(u)
     v = list(set(v))
-    v.sort()
+#    v.sort()
     if '' in v:
         v = v.remove('')
     return v
@@ -93,3 +114,19 @@ def consist_cols(dest=DATA_DIR):
         print(f'New Columns: {output}')
         print()
         (dest/p.name).write_text('\n'.join([output, *lines[1:]]))
+
+def open_data_frame(p):
+    cols_2_keep = COLS_2_KEEP
+#     cols_2_keep.extend([f'"{s}"' for s in cols_2_keep])
+#     columnize(cols_2_keep)
+    print(f'Processing file: {p.name}')
+    df = pd.read_csv(str(p))
+    print(f'{df.columns=}')
+    MAX_LEN = len(COLS_2_KEEP)
+    cols_2_drop = list(set(df.columns).difference(cols_2_keep))
+    print('Columns 2 Drop: ', cols_2_drop)
+    df = df.drop(columns=cols_2_drop).reindex(columns=cols_2_keep)
+    if len(df.columns) > MAX_LEN:
+        df.drop(df.columns[MAX_LEN:], axis=1, inplace=True)
+    print('New Columns: ', df.columns)
+    return df
