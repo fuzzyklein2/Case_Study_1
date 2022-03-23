@@ -132,6 +132,7 @@ def consist_cols(dest=DATA_DIR):
 def open_data_frame(p):
     """ Return a `pd.DataFrame` representing the file represented by `p`.
     """
+    write = partial(print, file=f)
     cols_2_keep = COLS_2_KEEP
     print(f'Processing file: {p.name}')
     df = pd.read_csv(p)
@@ -144,3 +145,19 @@ def open_data_frame(p):
         df.drop(df.columns[MAX_LEN:], axis=1, inplace=True)
     print('New Columns: ', df.columns)
     return df
+
+@path2str
+def read_trips_frame(f):
+    return pd.read_csv(f)
+
+def fix_trip_file_names():
+    """ Extract each month's trip data from whatever file it is found in. Then
+        put that data into a file whose name is formatted as YYYY-MM-ride-data.csv.
+    """
+    for p in list_trip_files():
+        print(f'Processing {str(p)}')
+        df = pd.read_csv(str(p))
+        print('Checking for null start times')
+
+def profile_trip_files():
+    pass
