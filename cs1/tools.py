@@ -210,6 +210,29 @@ def ftp_connect():
     ftp.sendcmd(f'PASS {password}')
     return ftp
 
+def get_year(p:Path):
+    """ Return the year that the file contains data for.
+        Files that contain "Station" need to be filtered out.
+    """
+
+
+def get_data(year=2021):
+    """ Create and return a dataframe consisting of all the data for a given
+        year.
+    """
+    # Preserve the current working directory.
+    prev_wd = Path(os.curdir).resolve().absolute()
+    # Move to the data directory.
+    cd(DATA_DIR)
+
+    # Create an empty list to store the files for `year` in.
+    F = list()
+
+    for p in TRIP_FILES]:
+        # Determine whether the file contains data for `year`.
+        if get_year(p) == year:
+            F.append(p)
+    cd(prev_wd)
 
 
 # def choose_name(names):
