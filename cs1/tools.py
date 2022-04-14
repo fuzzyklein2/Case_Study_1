@@ -228,11 +228,20 @@ def get_data(year=2021):
     # Create an empty list to store the files for `year` in.
     F = list()
 
-    for p in TRIP_FILES]:
+    for p in TRIP_FILES:
         # Determine whether the file contains data for `year`.
-        if get_year(p) == year:
+        # Assume, for now, that occurrence of the year in the filename constitutes relevance.
+        if str(year) in p.stem:
+            print(f'Processing: {p.name}')
             F.append(p)
+            
+    df = pd.DataFrame()
+    for p in F:
+        df = pd.concat([df, pd.read_csv(p.name)])
+            
     cd(prev_wd)
+    
+    return df
 
 
 # def choose_name(names):
